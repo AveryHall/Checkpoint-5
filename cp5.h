@@ -1,20 +1,33 @@
 /*
  * ========================================================================
- * 
+ *
  * cp5.h -------- A header file to be used in conjunction with our bison
  *		  parser; contains #defines and global declarations.
- * 
+ *
  * Programmer --- Avery Hall
- * 
+ *
  * ========================================================================
  */
 
-#define SYMTYPE_INT 		0
-#define SYMTYPE_REAL 		1
+#define ST_INT 		  0
+#define ST_REAL 		1
 
-#define SYMTYPE_REAL_ARRAY 	2
-#define SYMTYPE_INT_ARRAY 	3
+#define SK_SCALAR 	0
+#define SK_ARRAY  	1
 
 struct symbol {
-	char *var_name;
+	char *varname;
+	char kind;
+	char type;
+	void* address;
+	struct val v;
+};
+
+struct val {
+
+};
+
+extern struct symbol {
+
+	
 }

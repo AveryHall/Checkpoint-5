@@ -15,8 +15,82 @@
  * ========================================================================
  */
 
+#include "symtab.h"
+#include "y.tab.h"
 #include <stdio.h>
 #include <stdlib.h>
+
+struct symboltable symtab;
+
+struct symbolList {
+	struct symbolList *symlink;
+	struct symbol *thisSym;
+};
+
+/*
+ * =======================================================================
+ * InitTable()
+ * =======================================================================
+ */
+
+ void initTable()
+ {
+	 symtab.size = 0;
+	 symtab.nextAddress = 0;
+ }
+
+ /*
+  * =======================================================================
+  * addSymToTable()
+  * =======================================================================
+  */
+
+  void addSymToTable(char *name, char k, char t, int s) //(, int addr)
+  {
+
+		struct symbol sym;
+
+		//if(findSymbol(name) == -1) In parser is best
+		//{
+
+		//Set the values of the symbol
+		sym.varname = name;
+		sym.kind = k;
+		sym.type = t;
+		sym.size = s;
+		sym.address = symtab.nextAddress;
+
+		//Insert the symbol into the symtab at the current available location
+		symtab.st[symtab.size] = sym;
+
+		//Update the next available address in the gstal stack and the next available slot in the symtab
+		symtab.nextAddress += s;
+		symtab.size += 1;
+
+		//} else { You really want to do this in parser
+		//		//Throw an error
+		//}
+  }
+
+  /*
+   * =======================================================================
+   * findSymbol()
+   * =======================================================================
+   */
+
+   int findSymbol(char *name)
+   {
+
+		 for(int i=0; i< symtab.size; i++)
+		 {
+			 if(strcmp(name, symtab.st[i].varname) == 0)
+			 {
+				 return i;
+			 }
+		 }
+
+		 return -1;
+   }
 
 %}
 
@@ -24,6 +98,10 @@
    char  *cptr;
    int    ival;
    float  rval;
+
+	 char		symkind;
+   struct symbol *sym;
+   struct symbolList *symList;
 }
 
 %token        RWMAIN
@@ -67,16 +145,20 @@
 %token        LSQBRAC
 %token        ASSIGNOP
 %token        CARRIAGERETURN
-%token        FLTCONST
-%token        STRCONST
-%token        INTCONST
+%token <rval> FLTCONST
+%token <cptr> STRCONST
+%token <ival> INTCONST
 %token        NEWLINE
 %token        IGNORE
+
+%type  <symkind>  typename
+%type  <sym>      decitem
+%type  <symList>  decitemlist
 
 
 %%
 
-prog          : mainstmt datasect algrsect endmainstmt
+prog          : mainstmt { initTable(); } datasect algrsect endmainstmt
               ;
 
 mainstmt      : RWMAIN SEMICOLON
@@ -89,23 +171,73 @@ datasect      : RWDATA COLON decstmtlist
               | RWDATA COLON
               ;
 
-decstmtlist   : decstmt decstmtlist
+decstmtlist   : decstmt decstmtlist 
+			{
+				symList = $1;
+			}			
               | decstmt
+			{
+				symList = $1;
+			}
               ;
 
 decstmt       : typename COLON decitemlist SEMICOLON
+									{
+		  							struct symbolList *p;
+		  							p = $$;
+
+		  							while(p != NULL) {
+											struct symbol *s;
+											s = p->thisSym;
+
+											if(findSymbol(s->varname)==-1) {
+												addSymToTable(s->varname, s->kind, $1, s->size);
+											} else {
+												yyerror("duplicate declaration");
+												YYERROR;
+											}
+
+											p->symlink;
+		  							}
+									}
               ;
 
 typename      : RWREAL
+								{
+		  						$$ = ST_REAL;
+								}
               | RWINTEGER
+								{
+		  						$$ = ST_INT;
+								}
               ;
 
 decitemlist   : decitem COMMA decitemlist
+								{
+		  						$$ = malloc(sizeof(struct symbolList));
+		  						$$->symlink = $3;
+		  						$$->thisSym = $1;
+								}
               | decitem
+								{
+		  						$$ = malloc(sizeof(struct symbolList));
+		  						$$->symlink = NULL;
+		  						$$->thisSym = $1;
+								}
               ;
 
 decitem       : VARNAME
+								{
+		  						$$->varname = $1;
+		  						$$->kind = SK_SCALAR;
+		  						$$->size = 1;
+								}
               | VARNAME LSQBRAC INTCONST RSQBRAC
+								{
+		  						$$->varname = $1;
+		  						$$->kind = SK_ARRAY;
+		  						$$->size = $3;
+								}
               ;
 
 algrsect      : RWALGORITHM COLON statementlist
@@ -212,8 +344,8 @@ number        : INTCONST
 
 %%
 
-int yyerror()
+int yyerror(char *msg)
 {
-   printf("Called yyerror()\n");
-   return;
+   printf("Error: %s\n", msg);
+   return(0);
 }

@@ -1166,12 +1166,13 @@ YY_RULE_SETUP
 #line 263 "cp5.l"
 {
                                                                 if(DEBUG) printf("FLTCONST (%s) ", yytext);
+                                                                yylval.rval = atof(yytext);
                                                                 return (FLTCONST);
                                                               }
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 269 "cp5.l"
+#line 270 "cp5.l"
 {
                                           if(DEBUG) printf("STRCONST (%s) ", yytext);
                                           return (STRCONST);
@@ -1179,31 +1180,31 @@ YY_RULE_SETUP
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 275 "cp5.l"
+#line 276 "cp5.l"
 {
                                           if(DEBUG) printf("INTCONST (%s) ", yytext);
-                                          /*yylval.ival = atoi(yytext);*/
+                                          yylval.ival = atoi(yytext);
                                           return(INTCONST);
                                         }
 	YY_BREAK
 case 45:
 /* rule 45 can match eol */
 YY_RULE_SETUP
-#line 281 "cp5.l"
+#line 282 "cp5.l"
 {
                                           if(DEBUG) printf("NEWLINE ");
                                         }
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 285 "cp5.l"
+#line 286 "cp5.l"
 {
                                           if (DEBUG) printf("WHTSPCE ");
                                         }
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 289 "cp5.l"
+#line 290 "cp5.l"
 {
                                           if (DEBUG) printf("IGNORE ");
                                           return (IGNORE);
@@ -1211,10 +1212,10 @@ YY_RULE_SETUP
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 294 "cp5.l"
+#line 295 "cp5.l"
 ECHO;
 	YY_BREAK
-#line 1218 "lex.yy.c"
+#line 1219 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2215,7 +2216,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 294 "cp5.l"
+#line 295 "cp5.l"
 
 
 

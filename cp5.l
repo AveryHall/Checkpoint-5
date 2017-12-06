@@ -262,6 +262,7 @@
 
 (([0-9]+\.[0-9]+)|([0-9]+(\.[0-9]+)?[eE][-+]?[0-9]+))         {
                                                                 if(DEBUG) printf("FLTCONST (%s) ", yytext);
+                                                                yylval.rval = atof(yytext);
                                                                 return (FLTCONST);
                                                               }
 
@@ -274,7 +275,7 @@
 
 [0-9]+                             {
                                           if(DEBUG) printf("INTCONST (%s) ", yytext);
-                                          /*yylval.ival = atoi(yytext);*/
+                                          yylval.ival = atoi(yytext);
                                           return(INTCONST);
                                         }
 

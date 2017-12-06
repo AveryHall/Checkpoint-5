@@ -27,6 +27,8 @@ struct symbolList {
 	struct symbol *thisSym;
 };
 
+struct symbolList *symList;
+
 /*
  * =======================================================================
  * InitTable()
@@ -99,9 +101,10 @@ struct symbolList {
    int    ival;
    float  rval;
 
-	 char		symkind;
-   struct symbol *sym;
-   struct symbolList *symList;
+
+   char		       				symkind;
+   struct symbol       	*sym;
+   struct symbolList   	*symListPoint;
 }
 
 %token        RWMAIN
@@ -151,9 +154,12 @@ struct symbolList {
 %token        NEWLINE
 %token        IGNORE
 
-%type  <symkind>  typename
-%type  <sym>      decitem
-%type  <symList>  decitemlist
+%type  <symList>  			decstmt
+%type  <symListPoint>  	decitemlist
+%type  <symkind>  			typename
+%type  <sym>      			decitem
+
+
 
 
 %%
@@ -171,73 +177,75 @@ datasect      : RWDATA COLON decstmtlist
               | RWDATA COLON
               ;
 
-decstmtlist   : decstmt decstmtlist 
-			{
-				symList = $1;
-			}			
+decstmtlist   : decstmt decstmtlist
               | decstmt
-			{
-				symList = $1;
-			}
               ;
 
 decstmt       : typename COLON decitemlist SEMICOLON
-									{
-		  							struct symbolList *p;
-		  							p = $$;
+			{
 
-		  							while(p != NULL) {
-											struct symbol *s;
-											s = p->thisSym;
+				char t = $1;
+				//printf("%c\n",$1);
+				symList = $3;
 
-											if(findSymbol(s->varname)==-1) {
-												addSymToTable(s->varname, s->kind, $1, s->size);
-											} else {
-												yyerror("duplicate declaration");
-												YYERROR;
-											}
+				while(symList != NULL) {
+					struct symbol *s = symList->thisSym;
 
-											p->symlink;
-		  							}
-									}
+					if(findSymbol(s->varname) == -1) {
+						if(symtab.size != CAPACITY) {
+					    addSymToTable(s->varname, s->kind, t, s->size);
+					  } else {
+							yyerror("symbol table is full");
+							YYERROR;
+						}
+				  } else {
+						yyerror("duplicate declaration");
+						YYERROR;
+					}
+
+					symList = symList->symlink;
+				}
+			}
               ;
 
 typename      : RWREAL
-								{
-		  						$$ = ST_REAL;
-								}
+			{
+		  	$$ = ST_REAL;
+			}
               | RWINTEGER
-								{
-		  						$$ = ST_INT;
-								}
+			{
+		  	$$ = ST_INT;
+			}
               ;
 
 decitemlist   : decitem COMMA decitemlist
-								{
-		  						$$ = malloc(sizeof(struct symbolList));
-		  						$$->symlink = $3;
-		  						$$->thisSym = $1;
-								}
+			{
+		  	$$ = malloc(sizeof(struct symbolList));
+		  	$$->symlink = $3;
+		  	$$->thisSym = $1;
+			}
               | decitem
-								{
-		  						$$ = malloc(sizeof(struct symbolList));
-		  						$$->symlink = NULL;
-		  						$$->thisSym = $1;
-								}
+			{
+		  	$$ = malloc(sizeof(struct symbolList));
+		  	$$->symlink = NULL;
+		  	$$->thisSym = $1;
+			}
               ;
 
 decitem       : VARNAME
-								{
-		  						$$->varname = $1;
-		  						$$->kind = SK_SCALAR;
-		  						$$->size = 1;
-								}
+			{
+				$$ = malloc(sizeof(struct symbol));
+		  	$$->varname = $1;
+		  	$$->kind = SK_SCALAR;
+		  	$$->size = 1;
+			}
               | VARNAME LSQBRAC INTCONST RSQBRAC
-								{
-		  						$$->varname = $1;
-		  						$$->kind = SK_ARRAY;
-		  						$$->size = $3;
-								}
+			{
+				$$ = malloc(sizeof(struct symbol));
+		  	$$->varname = $1;
+		  	$$->kind = SK_ARRAY;
+		  	$$->size = $3;
+			}
               ;
 
 algrsect      : RWALGORITHM COLON statementlist
